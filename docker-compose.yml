@@ -1,0 +1,99 @@
+version: '2'
+
+services:
+  nginx:
+    #build: ./nginx-alpine
+    image: nginx/nginx-alpine:v1
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - phpfpm
+    links:
+      - "phpfpm:php"
+    env_file:
+      - ./docker-nginx.env
+    volumes:
+      - /data/www:/data/www
+      - /data/nginx/vhost:/etc/nginx/vhost
+
+  phpfpm7:
+    #build: ./php-fpm-alpine
+    image: mumianzi/php:7.1-fpm-alpine
+    container_name: phpfpm7
+#    ports:
+#      - "9002:9000"
+    depends_on:
+      - mysql
+      - mongodb
+      - redis
+      - elasticsearch
+    volumes:
+      - /data/www:/data/www
+    links:
+      - "mysql"
+      - "mongodb"
+      - "redis"
+      - "elasticsearch"
+    env_file:
+      - ./docker-phpfpm.env
+    extra_hosts:
+      - "www.2.pc:10.0.0.234"
+  phpfpm:
+    #build: ./php-fpm-alpine
+    image: mumianzi/php:5.6-fpm-alpine
+    container_name: phpfpm
+    ports:
+      - "9000:9000"
+    depends_on:
+      - mysql
+      - mongodb
+      - redis
+      - elasticsearch
+    volumes:
+      - /data/www:/data/www
+    links:
+      - "mysql"
+      - "mongodb"
+      - "redis"
+      - "elasticsearch"
+    env_file:
+      - ./docker-phpfpm.env
+    extra_hosts:
+      - "www.2.pc:10.0.0.234"
+      - "api.zhen22.com:10.0.0.234"
+  mysql:
+    #build: ./mysql-alpine
+    image: mysql
+    container_name: mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - /data/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD : 22222222
+  mongodb:
+    #build: ./mongodb
+    image: mongo:3.4.10
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - /data/mongo:/data/db
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - /data/redis:/data
+  elasticsearch:
+    image: elasticsearch:2.3.5
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+    #  - "9300:9300"
+    volumes:
+      - /data/elasticsearch/data:/usr/share/elasticsearch/data
+      - /data/elasticsearch/config:/usr/share/elasticsearch/config
