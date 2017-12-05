@@ -161,21 +161,10 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
         && docker-php-ext-install -j${NPROC} /tmp/mongo \
 	&& apk del --force libressl-dev \
         && rm -r /tmp/mongo \
-# gearman
-	&& apk add --update \
-                libressl-dev@edge \
-                gearman-dev@testing \
-                gearman-libs@testing \
-        && curl -fsSL "${URL_PREFIX}https://github.com/hjr3/pecl-gearman/archive/${GEARAMN_ID}.zip" -o gearman.zip \
-	&& echo "${GEARMAN_SHA1} *gearman.zip" | sha1sum -c - \
-        && mkdir -p /tmp/gearman \
-        && unzip -q gearman.zip -d /tmp/gearman \
-        && rm gearman.zip \
-        && docker-php-ext-install -j${NPROC} /tmp/gearman/pecl-gearman-${GEARAMN_ID} \
-        && rm -r /tmp/gearman \
-	&& apk del --force libressl-dev gearman-dev \
-        && rm -rf /var/cache/apk/* \
-	\
+# git
+	&& apk --update add git openssh \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm /var/cache/apk/*
 # end
-        && mv -f ${repos}_bk ${repos} \
+    && mv -f ${repos}_bk ${repos} \
 
