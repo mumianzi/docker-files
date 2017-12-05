@@ -132,24 +132,24 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
         && docker-php-ext-install -j${NPROC} /tmp/redis \
         && rm -r /tmp/redis \
 # xdebug
-        && curl -fsSL "${URL_PREFIX}https://xdebug.org/files/xdebug-${XDEBUG_VERSION}.tgz" -o xdebug.tar.gz \
-	&& echo "${XDEBUG_SHA1} *xdebug.tar.gz" | sha1sum -c - \
-        && mkdir -p /tmp/xdebug \
-        && tar -xf xdebug.tar.gz -C /tmp/xdebug --strip-components=1 \
-        && rm xdebug.tar.gz \
-        && docker-php-ext-install -j${NPROC} /tmp/xdebug \
-	&& echo "" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-	&& echo "xdebug.default_enable = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-	&& echo "xdebug.remote_enable = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-	&& echo "xdebug.remote_handler=dbgp" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-	&& echo "xdebug.max_nesting_level=1000" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-	&& echo ";xdebug.remote_host = 10.10.10.1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-	&& echo ";xdebug.remote_host = 10.0.2.2" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-	&& echo "xdebug.remote_port = 9000" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-	&& echo "xdebug.remote_autostart=0" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-	&& echo "xdebug.remote_connect_back = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-	&& echo "xdebug.idekey = \"PHPSTORM\"" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-        && rm -r /tmp/xdebug \
+#         && curl -fsSL "${URL_PREFIX}https://xdebug.org/files/xdebug-${XDEBUG_VERSION}.tgz" -o xdebug.tar.gz \
+# 	&& echo "${XDEBUG_SHA1} *xdebug.tar.gz" | sha1sum -c - \
+#         && mkdir -p /tmp/xdebug \
+#         && tar -xf xdebug.tar.gz -C /tmp/xdebug --strip-components=1 \
+#         && rm xdebug.tar.gz \
+#         && docker-php-ext-install -j${NPROC} /tmp/xdebug \
+# 	&& echo "" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+# 	&& echo "xdebug.default_enable = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+# 	&& echo "xdebug.remote_enable = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+# 	&& echo "xdebug.remote_handler=dbgp" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+# 	&& echo "xdebug.max_nesting_level=1000" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+# 	&& echo ";xdebug.remote_host = 10.10.10.1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+# 	&& echo ";xdebug.remote_host = 10.0.2.2" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+# 	&& echo "xdebug.remote_port = 9000" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+# 	&& echo "xdebug.remote_autostart=0" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+# 	&& echo "xdebug.remote_connect_back = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+# 	&& echo "xdebug.idekey = \"PHPSTORM\"" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+#         && rm -r /tmp/xdebug \
 # mongo legacy
         && apk add --update \
                 libressl-dev@edge \
