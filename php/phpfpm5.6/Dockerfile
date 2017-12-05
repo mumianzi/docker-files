@@ -164,7 +164,6 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 # git
 	&& apk --update add git openssh \
     && rm -rf /var/lib/apt/lists/* \
-    && rm /var/cache/apk/*
+    && rm /var/cache/apk/* \
 # end
-    && mv -f ${repos}_bk ${repos} \
-
+    && mv -f ${repos}_bk ${repos}
