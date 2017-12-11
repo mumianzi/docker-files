@@ -1,24 +1,15 @@
-FROM php:5.6-fpm-alpine
-MAINTAINER dishuostecli "dishuostecli@zhen22.com"
+FROM php:7.1-fpm-alpine
+MAINTAINER stanzhou "stanzhou@zhen22.com"
 
 ARG ALPINE_REPO=http://dl-cdn.alpinelinux.org
 ARG URL_PREFIX=
+#ARG PROXY_ADD=http://10.0.0.91:1083
+ARG PROXY_DNS=10.222.0.1
+
 
 ENV PHP_PHAR_DIR="${PHP_INI_DIR}/phar"
 ENV PATH="${PATH}:${PHP_PHAR_DIR}"
-ENV TIMEZONE="Asia/Shanghai" \
-        IMAGICK_VERSION="3.4.3" \
-        IMAGICK_SHA1="810ec3e932efb3298e285158c72312134b6f8279" \
-        GEARAMN_ID="cb67bb8f7551de280593ceb561bd4faf2d60ebe3" \
-        GEARMAN_SHA1="78bc039c168c680b2c5fa4a1441bca6bd81f771c" \
-        SWOOLE_VERSION="1.9.5" \
-        SWOOLE_SHA1="7f3cefd1991cc5514bbba19db7358346b82aeeb3" \
-        REDIS_VERSION="2.2.8" \
-        REDIS_SHA1="909e04a0770006b7a407d06245af8d9d18268507" \
-        MONGO_VERSION="1.6.14" \
-        MONGO_SHA1="ceb59e08ee2e71dda23ba5c0989fd5172dea107d" \
-        XDEBUG_VERSION="2.5.1" \
-        XDEBUG_SHA1="0efb4fd7b2c3f6b3130db0145492a56df41f7c55" 
+ENV TIMEZONE="Asia/Shanghai" 
 
 RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 	&& repos=/etc/apk/repositories \
@@ -34,6 +25,9 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
         \
         && set -xe \
 	&& NPROC=$(getconf _NPROCESSORS_ONLN) \
+# proxy_dns
+	&& cat /etc/resolv.conf > /etc/resolv.conf.bak \
+	&& echo 'nameserver ${PROXY_DNS}' >> /etc/resolv.conf \
 # phar
         && mkdir ${PHP_PHAR_DIR} \
         && EXPECTED_SIGNATURE=$(curl -fsSL ${URL_PREFIX}https://composer.github.io/installer.sig) \
@@ -108,11 +102,10 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 		imagemagick-dev \
 	&& apk add --no-cache \
                 imagemagick \
-        && curl -fsSL "${URL_PREFIX}https://github.com/mkoppanen/imagick/archive/${IMAGICK_VERSION}.tar.gz" -o imagick.tar.gz \
-	&& echo "${IMAGICK_SHA1} *imagick.tar.gz" | sha1sum -c - \
+        && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/imagick" -o imagick.tgz \
         && mkdir -p /tmp/imagick \
-        && tar -xf imagick.tar.gz -C /tmp/imagick --strip-components=1 \
-        && rm imagick.tar.gz \
+        && tar -xf imagick.tgz -C /tmp/imagick --strip-components=1 \
+        && rm imagick.tgz \
         && docker-php-ext-install /tmp/imagick \
         && rm -r /tmp/imagick \
 	\
@@ -121,55 +114,51 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
                 linux-headers \
                 zlib-dev \
         \
-        && curl -fsSL "${URL_PREFIX}https://github.com/swoole/swoole-src/archive/v${SWOOLE_VERSION}.tar.gz" -o swoole.tar.gz \
-        && echo "${SWOOLE_SHA1} *swoole.tar.gz" | sha1sum -c - \
+        && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/swoole" -o swoole.tgz \
         && mkdir -p /tmp/swoole \
-        && tar -xf swoole.tar.gz -C /tmp/swoole --strip-components=1 \
-        && rm swoole.tar.gz \
+        && tar -xf swoole.tgz -C /tmp/swoole --strip-components=1 \
+        && rm swoole.tgz \
         && docker-php-ext-configure /tmp/swoole --enable-swoole \
         && docker-php-ext-install -j${NPROC} /tmp/swoole \
         && rm -r /tmp/swoole \
 # redis
-        && curl -fsSL "${URL_PREFIX}https://github.com/phpredis/phpredis/archive/${REDIS_VERSION}.tar.gz" -o redis.tar.gz \
-	&& echo "${REDIS_SHA1} *redis.tar.gz" | sha1sum -c - \
+        && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/redis" -o redis.tgz \
         && mkdir -p /tmp/redis \
-        && tar -xf redis.tar.gz -C /tmp/redis --strip-components=1 \
-        && rm redis.tar.gz \
+        && tar -xf redis.tgz -C /tmp/redis --strip-components=1 \
+        && rm redis.tgz \
         && docker-php-ext-install -j${NPROC} /tmp/redis \
         && rm -r /tmp/redis \
 # xdebug
-         && curl -fsSL "${URL_PREFIX}https://xdebug.org/files/xdebug-${XDEBUG_VERSION}.tgz" -o xdebug.tar.gz \
- 	&& echo "${XDEBUG_SHA1} *xdebug.tar.gz" | sha1sum -c - \
-   && mkdir -p /tmp/xdebug \
-   && tar -xf xdebug.tar.gz -C /tmp/xdebug --strip-components=1 \
-   && rm xdebug.tar.gz \
-   && docker-php-ext-install -j${NPROC} /tmp/xdebug \
- 	&& echo "" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
- 	&& echo "xdebug.default_enable = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
- 	&& echo "xdebug.remote_enable = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
- 	&& echo "xdebug.remote_handler=dbgp" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
- 	&& echo "xdebug.max_nesting_level=1000" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
- 	&& echo ";xdebug.remote_host = 10.10.10.1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
- 	&& echo ";xdebug.remote_host = 10.0.2.2" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
- 	&& echo "xdebug.remote_port = 9000" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
- 	&& echo "xdebug.remote_autostart=0" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
- 	&& echo "xdebug.remote_connect_back = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
- 	&& echo "xdebug.idekey = \"PHPSTORM\"" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-  && rm -r /tmp/xdebug \
-# mongo legacy
-        && apk add --update \
-                libressl-dev@edge \
-        && curl -fsSL "${URL_PREFIX}https://github.com/mongodb/mongo-php-driver-legacy/archive/${MONGO_VERSION}.tar.gz" -o mongo.tar.gz \
-	&& echo "${MONGO_SHA1} *mongo.tar.gz" | sha1sum -c - \
-        && mkdir -p /tmp/mongo \
-        && tar -xf mongo.tar.gz -C /tmp/mongo --strip-components=1 \
-        && rm mongo.tar.gz \
-        && docker-php-ext-install -j${NPROC} /tmp/mongo \
-	&& apk del --force libressl-dev \
-        && rm -r /tmp/mongo \
-# git
-	&& apk --update add git openssh \
-    && rm -rf /var/lib/apt/lists/* \
-    && rm /var/cache/apk/* \
+        && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/xdebug" -o xdebug.tar.gz \
+        && mkdir -p /tmp/xdebug \
+        && tar -xf xdebug.tar.gz -C /tmp/xdebug --strip-components=1 \
+        && rm xdebug.tar.gz \
+        && docker-php-ext-install -j${NPROC} /tmp/xdebug \
+	&& echo "" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+	&& echo "xdebug.default_enable = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+	&& echo "xdebug.remote_enable = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+	&& echo "xdebug.remote_handler=dbgp" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+	&& echo "xdebug.max_nesting_level=1000" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+	&& echo ";xdebug.remote_host = 10.10.10.1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+	&& echo ";xdebug.remote_host = 10.0.2.2" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+	&& echo "xdebug.remote_port = 9000" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+	&& echo "xdebug.remote_autostart=0" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+	&& echo "xdebug.remote_connect_back = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+	&& echo "xdebug.idekey = \"PHPSTORM\"" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+        && rm -r /tmp/xdebug \
+# mongodb 
+        && apk add --no-cache --virtual .build-deps \
+                openssl-dev \
+        && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/mongodb" -o mongodb.tar.gz \
+        && mkdir -p /tmp/mongodb \
+        && tar -xf mongodb.tar.gz -C /tmp/mongodb --strip-components=1 \
+        && rm mongodb.tar.gz \
+        && docker-php-ext-install -j${NPROC} /tmp/mongodb \
+        && rm -r /tmp/mongodb \
+        && rm -rf /var/cache/apk/* \
+	\
 # end
-    && mv -f ${repos}_bk ${repos}
+        && rm -rf /var/cache/apk/* \
+	&& mv -f ${repos}_bk ${repos} \
+	&& cat /etc/resolv.conf.bak > /etc/resolv.conf \
+        && rm -f /etc/resolv.conf.bak
