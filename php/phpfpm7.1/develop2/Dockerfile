@@ -96,6 +96,12 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 		--with-pdo-mysql=mysqlnd \
 	&& docker-php-ext-install -j${NPROC} mysqli \
 	\
+# pdo
+	&& docker-php-ext-install -j${NPROC} pdo_mysql \
+	\
+# pdo_mysql
+	&& docker-php-ext-install -j${NPROC} pdo_mysql \
+	\
 # imagick
 	&& apk add --no-cache --virtual .build-deps \
 		libtool \
