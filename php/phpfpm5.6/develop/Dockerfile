@@ -97,7 +97,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 	&& docker-php-ext-install -j${NPROC} mysqli \
 	\
 # pdo
-	&& docker-php-ext-install -j${NPROC} pdo_mysql \
+	&& docker-php-ext-install -j${NPROC} pdo \
 	\
 # pdo_mysql
 	&& docker-php-ext-install -j${NPROC} pdo_mysql \
