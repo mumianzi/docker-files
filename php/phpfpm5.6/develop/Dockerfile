@@ -137,6 +137,8 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
         && rm redis.tar.gz \
         && docker-php-ext-install -j${NPROC} /tmp/redis \
         && rm -r /tmp/redis \
+#gearman
+	&& pecl install gearman && docker-php-ext-enable gearman \
 # xdebug
          && curl -fsSL "${URL_PREFIX}https://xdebug.org/files/xdebug-${XDEBUG_VERSION}.tgz" -o xdebug.tar.gz \
  	&& echo "${XDEBUG_SHA1} *xdebug.tar.gz" | sha1sum -c - \
