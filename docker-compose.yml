@@ -3,7 +3,7 @@ version: '2'
 services:
   nginx:
     #build: ./nginx-alpine
-    image: nginx/nginx-alpine:v1
+    image: mumianzi/nginx
     container_name: nginx
     ports:
       - "80:80"
