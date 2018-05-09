@@ -1,7 +1,7 @@
 FROM php:5.6-fpm-alpine
 MAINTAINER dishuostecli "dishuostecli@zhen22.com"
 
-ARG ALPINE_REPO=http://dl-cdn.alpinelinux.org
+ARG ALPINE_REPO=http://mirrors.ustc.edu.cn
 ARG URL_PREFIX=
 
 ENV PHP_PHAR_DIR="${PHP_INI_DIR}/phar"
@@ -138,9 +138,14 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
         && docker-php-ext-install -j${NPROC} /tmp/redis \
         && rm -r /tmp/redis \
 #gearman
-	&& pecl install gearman && docker-php-ext-enable gearman \
+    &&  apk add --no-cache --virtual .build-deps gearman-dev gearman-libs gcc autoconf g++ zlib-dev make  \
+        --repository ${URL_PREFIX}${ALPINE_REPO}/alpine/edge/community \
+        --repository ${URL_PREFIX}${ALPINE_REPO}/alpine/edge/main \
+        --repository ${URL_PREFIX}${ALPINE_REPO}/alpine/edge/testing \
+    && pecl install gearman && docker-php-ext-enable gearman \
+    && apk del --force gearman-dev gcc autoconf g++ zlib-dev make \
 # xdebug
-         && curl -fsSL "${URL_PREFIX}https://xdebug.org/files/xdebug-${XDEBUG_VERSION}.tgz" -o xdebug.tar.gz \
+    && curl -fsSL "${URL_PREFIX}https://xdebug.org/files/xdebug-${XDEBUG_VERSION}.tgz" -o xdebug.tar.gz \
  	&& echo "${XDEBUG_SHA1} *xdebug.tar.gz" | sha1sum -c - \
          && mkdir -p /tmp/xdebug \
          && tar -xf xdebug.tar.gz -C /tmp/xdebug --strip-components=1 \
