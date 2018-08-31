@@ -78,10 +78,10 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 	\
 # mcrypt
 	&& apk add --no-cache --virtual .build-deps \
-		libmcrypt-dev \
-	&& apk add --no-cache \
-		libmcrypt \
-	&& docker-php-ext-install -j${NPROC} mcrypt \
+           libmcrypt-dev make \
+        && pecl install mcrypt-1.0.1 \
+        && docker-php-ext-enable mcrypt.so \
+        && apk del libmcrypt-dev \
 	\
 # mysqli
 	&& docker-php-ext-configure mysqli \
@@ -157,8 +157,13 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
         && rm -r /tmp/mongodb \
         && rm -rf /var/cache/apk/* \
 	\
+#composer
+	curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+    && composer config -g repositories.packagist composer https://packagist.phpcomposer.com \
+    && composer self-update --clean-backups \
 # end
-        && rm -rf /var/cache/apk/* \
+    && rm -rf /var/cache/apk/* \
+    && rm -rf /usr/local/src/* \
 	&& mv -f ${repos}_bk ${repos} \
 	&& cat /etc/resolv.conf.bak > /etc/resolv.conf \
-        && rm -f /etc/resolv.conf.bak
+    && rm -f /etc/resolv.conf.bak

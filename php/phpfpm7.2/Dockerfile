@@ -61,7 +61,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 		zlib-dev \
 	&& docker-php-ext-install -j${NPROC} zip \
 	\
-# gd
+# gd libmcrypt-dev
 	&& apk add --no-cache --virtual .build-deps \
 		libpng-dev \
 		freetype-dev \
@@ -78,10 +78,10 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 	\
 # mcrypt
 	&& apk add --no-cache --virtual .build-deps \
-		libmcrypt-dev \
-	&& apk add --no-cache \
-		libmcrypt \
-	&& docker-php-ext-install -j${NPROC} mcrypt \
+       libmcrypt-dev make \
+    && pecl install mcrypt-1.0.1 \
+    && docker-php-ext-enable mcrypt.so \
+    && apk del libmcrypt-dev \
 	\
 # mysqli
 	&& docker-php-ext-configure mysqli \
@@ -146,20 +146,26 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 # 	&& echo "xdebug.remote_connect_back = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
 # 	&& echo "xdebug.idekey = \"PHPSTORM\"" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
 #         && rm -r /tmp/xdebug \
-# mongodb
-        && apk add --no-cache --virtual .build-deps \
-                openssl-dev \
-        && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/mongodb" -o mongodb.tar.gz \
-        && mkdir -p /tmp/mongodb \
-        && tar -xf mongodb.tar.gz -C /tmp/mongodb --strip-components=1 \
-        && rm mongodb.tar.gz \
-        && docker-php-ext-install -j${NPROC} /tmp/mongodb \
-        && rm -r /tmp/mongodb \
-        && rm -rf /var/cache/apk/* \
+# mongodb--
+#        && apk add --no-cache --virtual .build-deps \
+#                openssl-dev \
+#        && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/mongodb" -o mongodb.tar.gz \
+#        && mkdir -p /tmp/mongodb \
+#        && tar -xf mongodb.tar.gz -C /tmp/mongodb --strip-components=1 \
+#        && rm mongodb.tar.gz \
+#        && docker-php-ext-install -j${NPROC} /tmp/mongodb \
+#        && rm -r /tmp/mongodb \
+#        && rm -rf /var/cache/apk/* \
 	\
+#composer
+	curl -sS https://install.phpcomposer.com/installer | php \
+    && mv composer.phar /usr/local/bin/composer \
+    && composer config -g repositories.packagist composer https://packagist.phpcomposer.com \
+    && composer self-update --clean-backups \
 # end
-        && rm -rf /var/cache/apk/* \
+    && rm -rf /var/cache/apk/* \
+    && rm -rf /usr/local/src/* \
 	&& mv -f ${repos}_bk ${repos} \
 	&& cat /etc/resolv.conf.bak > /etc/resolv.conf \
-        && rm -f /etc/resolv.conf.bak
+    && rm -f /etc/resolv.conf.bak
 
