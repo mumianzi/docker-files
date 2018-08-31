@@ -78,7 +78,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 	\
 # mcrypt
 	&& apk add --no-cache --virtual .build-deps \
-       libmcrypt-dev make \
+       libmcrypt-dev g++ make autoconf \
     && pecl install mcrypt-1.0.1 \
     && docker-php-ext-enable mcrypt.so \
     && apk del libmcrypt-dev \
