@@ -3,8 +3,7 @@ MAINTAINER stanzhou "stanzhou@zhen22.com"
 
 ARG ALPINE_REPO=http://dl-cdn.alpinelinux.org
 ARG URL_PREFIX=
-#ARG PROXY_ADD=http://10.0.0.91:1083
-ARG PROXY_DNS=10.222.0.1
+#ARG PROXY_DNS=10.222.0.1
 
 
 ENV PHP_PHAR_DIR="${PHP_INI_DIR}/phar"
@@ -25,8 +24,8 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
         \
         && set -xe \
 	&& NPROC=$(getconf _NPROCESSORS_ONLN) \
-# proxy_dns
-	&& cat /etc/resolv.conf > /etc/resolv.conf.bak \
+## proxy_dns
+#	&& cat /etc/resolv.conf > /etc/resolv.conf.bak \
 #	&& echo 'nameserver ${PROXY_DNS}' >> /etc/resolv.conf \
 # phar
         && mkdir ${PHP_PHAR_DIR} \
@@ -48,7 +47,6 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 		opcache \
 		pcntl \
 		sockets \
-		tokenizer \
 	\
 # gettext
 	&& apk add --no-cache --virtual .build-deps \
@@ -71,6 +69,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 		libpng \
 		libjpeg-turbo \
 		freetype \
+		libmcrypt-dev \
 	&& docker-php-ext-configure gd \
 		--with-freetype-dir=/usr/include/ \
 		--with-png-dir=/usr/include/ \
@@ -156,15 +155,13 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
     && rm mongodb.tar.gz \
     && docker-php-ext-install -j${NPROC} /tmp/mongodb \
     && rm -r /tmp/mongodb \
-    && rm -rf /var/cache/apk/* \
-    && apk del -f .build-deps \
 	\
 ##composer
 #	&& curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
 # end
 	&& apk del -f .build-deps \
-    && rm -rf /var/cache/apk/* \
-    && rm -rf /usr/local/src/* \
-	&& mv -f ${repos}_bk ${repos} \
-	&& cat /etc/resolv.conf.bak > /etc/resolv.conf \
-    && rm -f /etc/resolv.conf.bak
+#	&& cat /etc/resolv.conf.bak > /etc/resolv.conf \
+#	&& rm -f /etc/resolv.conf.bak \
+	&& rm -rf /var/cache/apk/* \
+	&& rm -rf /usr/local/src/* \
+	&& mv -f ${repos}_bk ${repos}
