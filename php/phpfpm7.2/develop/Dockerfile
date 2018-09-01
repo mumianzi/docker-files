@@ -27,7 +27,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 	&& NPROC=$(getconf _NPROCESSORS_ONLN) \
 # proxy_dns
 	&& cat /etc/resolv.conf > /etc/resolv.conf.bak \
-	&& echo 'nameserver ${PROXY_DNS}' >> /etc/resolv.conf \
+#	&& echo 'nameserver ${PROXY_DNS}' >> /etc/resolv.conf \
 # phar
         && mkdir ${PHP_PHAR_DIR} \
         && EXPECTED_SIGNATURE=$(curl -fsSL ${URL_PREFIX}https://composer.github.io/installer.sig) \
@@ -48,6 +48,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 		opcache \
 		pcntl \
 		sockets \
+		tokenizer \
 	\
 # gettext
 	&& apk add --no-cache --virtual .build-deps \
@@ -76,13 +77,6 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 		--with-jpeg-dir=/usr/include/ \
 	&& docker-php-ext-install -j${NPROC} gd \
 	\
-# mcrypt
-	&& apk add --no-cache --virtual .build-deps \
-           libmcrypt-dev g++ make autoconf \
-        && pecl install mcrypt-1.0.1 \
-        && docker-php-ext-enable mcrypt.so \
-        && apk del libmcrypt-dev \
-	\
 # mysqli
 	&& docker-php-ext-configure mysqli \
 		--with-mysql=/usr/bin/mysql_config  \
@@ -101,39 +95,46 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 		libtool \
 		imagemagick-dev \
 	&& apk add --no-cache \
-                imagemagick \
-        && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/imagick" -o imagick.tgz \
-        && mkdir -p /tmp/imagick \
-        && tar -xf imagick.tgz -C /tmp/imagick --strip-components=1 \
-        && rm imagick.tgz \
-        && docker-php-ext-install /tmp/imagick \
-        && rm -r /tmp/imagick \
+            imagemagick \
+    && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/imagick" -o imagick.tgz \
+    && mkdir -p /tmp/imagick \
+    && tar -xf imagick.tgz -C /tmp/imagick --strip-components=1 \
+    && rm imagick.tgz \
+    && docker-php-ext-install /tmp/imagick \
+    && rm -r /tmp/imagick \
 	\
+# mcrypt
+    && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/mcrypt" -o mcrypt.tgz \
+    && mkdir -p /tmp/mcrypt \
+    && tar -xf mcrypt.tgz -C /tmp/mcrypt --strip-components=1 \
+    && rm mcrypt.tgz \
+    && docker-php-ext-install -j${NPROC} /tmp/mcrypt \
+    && rm -r /tmp/mcrypt \
 # swoole
-        && apk add --no-cache --virtual .build-deps \
-                linux-headers \
-                zlib-dev \
-        \
-        && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/swoole" -o swoole.tgz \
-        && mkdir -p /tmp/swoole \
-        && tar -xf swoole.tgz -C /tmp/swoole --strip-components=1 \
-        && rm swoole.tgz \
-        && docker-php-ext-configure /tmp/swoole --enable-swoole \
-        && docker-php-ext-install -j${NPROC} /tmp/swoole \
-        && rm -r /tmp/swoole \
+    && apk add --no-cache --virtual .build-deps \
+            linux-headers \
+            zlib-dev \
+    \
+    && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/swoole" -o swoole.tgz \
+    && mkdir -p /tmp/swoole \
+    && tar -xf swoole.tgz -C /tmp/swoole --strip-components=1 \
+    && rm swoole.tgz \
+    && docker-php-ext-configure /tmp/swoole --enable-swoole \
+    && docker-php-ext-install -j${NPROC} /tmp/swoole \
+    && rm -r /tmp/swoole \
 # redis
-        && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/redis" -o redis.tgz \
-        && mkdir -p /tmp/redis \
-        && tar -xf redis.tgz -C /tmp/redis --strip-components=1 \
-        && rm redis.tgz \
-        && docker-php-ext-install -j${NPROC} /tmp/redis \
-        && rm -r /tmp/redis \
+    && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/redis" -o redis.tgz \
+    && mkdir -p /tmp/redis \
+    && tar -xf redis.tgz -C /tmp/redis --strip-components=1 \
+    && rm redis.tgz \
+    && docker-php-ext-install -j${NPROC} /tmp/redis \
+    && rm -r /tmp/redis \
 # xdebug
-        && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/xdebug" -o xdebug.tar.gz \
-        && mkdir -p /tmp/xdebug \
-        && tar -xf xdebug.tar.gz -C /tmp/xdebug --strip-components=1 \
-        && rm xdebug.tar.gz \
-        && docker-php-ext-install -j${NPROC} /tmp/xdebug \
+    && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/xdebug" -o xdebug.tar.gz \
+    && mkdir -p /tmp/xdebug \
+    && tar -xf xdebug.tar.gz -C /tmp/xdebug --strip-components=1 \
+    && rm xdebug.tar.gz \
+    && docker-php-ext-install -j${NPROC} /tmp/xdebug \
 	&& echo "" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
 	&& echo "xdebug.default_enable = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
 	&& echo "xdebug.remote_enable = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
@@ -145,23 +146,23 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 	&& echo "xdebug.remote_autostart=0" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
 	&& echo "xdebug.remote_connect_back = 1" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
 	&& echo "xdebug.idekey = \"PHPSTORM\"" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-        && rm -r /tmp/xdebug \
+    && rm -r /tmp/xdebug \
 # mongodb
-        && apk add --no-cache --virtual .build-deps \
-                openssl-dev \
-        && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/mongodb" -o mongodb.tar.gz \
-        && mkdir -p /tmp/mongodb \
-        && tar -xf mongodb.tar.gz -C /tmp/mongodb --strip-components=1 \
-        && rm mongodb.tar.gz \
-        && docker-php-ext-install -j${NPROC} /tmp/mongodb \
-        && rm -r /tmp/mongodb \
-        && rm -rf /var/cache/apk/* \
+    && apk add --no-cache --virtual .build-deps \
+            openssl-dev \
+    && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/mongodb" -o mongodb.tar.gz \
+    && mkdir -p /tmp/mongodb \
+    && tar -xf mongodb.tar.gz -C /tmp/mongodb --strip-components=1 \
+    && rm mongodb.tar.gz \
+    && docker-php-ext-install -j${NPROC} /tmp/mongodb \
+    && rm -r /tmp/mongodb \
+    && rm -rf /var/cache/apk/* \
+    && apk del -f .build-deps \
 	\
-#composer
-	curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-    && composer config -g repositories.packagist composer https://packagist.phpcomposer.com \
-    && composer self-update --clean-backups \
+##composer
+#	&& curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
 # end
+	&& apk del -f .build-deps \
     && rm -rf /var/cache/apk/* \
     && rm -rf /usr/local/src/* \
 	&& mv -f ${repos}_bk ${repos} \
