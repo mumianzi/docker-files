@@ -10,9 +10,11 @@ ENV PHP_PHAR_DIR="${PHP_INI_DIR}/phar"
 ENV PATH="${PATH}:${PHP_PHAR_DIR}"
 ENV TIMEZONE="Asia/Shanghai"
 
+COPY supervisord.conf /usr/local/src/supervisord.conf
+
 RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 	&& repos=/etc/apk/repositories \
-	&& mv -f ${repos} ${repos}_bk \
+  && mv -f ${repos} ${repos}_bk \
 	&& echo "${URL_PREFIX}${ALPINE_REPO}/alpine/v${ver}/main" > ${repos} \
 	&& echo "${URL_PREFIX}${ALPINE_REPO}/alpine/v${ver}/community" >> ${repos} \
 	&& echo "@edge ${URL_PREFIX}${ALPINE_REPO}/alpine/edge/main" >> ${repos} \
@@ -164,14 +166,18 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 #        && rm -r /tmp/mongodb \
 #        && rm -rf /var/cache/apk/* \
 	\
+# supervisor
+  && apk add --no-cache supervisor \
+  && mv -f /usr/local/src/supervisord.conf /etc/supervisord.conf \
 ##composer
 #	&& curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
 # end
-# 增加supervisor
-	&& apk add --no-cache supervisor \
 	&& apk del -f .build-deps \
 #	&& cat /etc/resolv.conf.bak > /etc/resolv.conf \
 #    && rm -f /etc/resolv.conf.bak
 	&& rm -rf /var/cache/apk/* \
 	&& rm -rf /usr/local/src/* \
 	&& mv -f ${repos}_bk ${repos}
+
+ENTRYPOINT ["/usr/bin/supervisord"]
+CMD ["-c","/etc/supervisord.conf"]
