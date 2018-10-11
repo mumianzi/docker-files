@@ -1,5 +1,5 @@
 #git
-FROM php:7.2-fpm-alpine
+FROM mumianzi/php:7.1-fpm-alpine
 MAINTAINER stanzhou "stanzhou@zhen22.com"
 
 #git
