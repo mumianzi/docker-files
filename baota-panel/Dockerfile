@@ -14,7 +14,7 @@ RUN yum -y update \
     && ln -s /www/init.d /etc/init.d \
     #安装宝塔
     && wget -O install.sh http://download.bt.cn/install/install_6.0.sh \
-    && sh install.sh \
+    && echo y | bash install.sh \
     && chmod +x /entrypoint.sh
 
 CMD /entrypoint.sh
