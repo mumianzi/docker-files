@@ -10,7 +10,7 @@ ENV LUA_MODULE_VERSION 0.10.15
 ENV LUAJIT_LIB=/usr/lib
 ENV LUAJIT_INC=/usr/include/luajit-2.0
 
-RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
+RUN GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
     && CONFIG="\
         --prefix=/etc/nginx \
         --sbin-path=/usr/sbin/nginx \
@@ -53,7 +53,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
         --with-stream_ssl_module \
         --with-stream_ssl_preread_module \
         --with-cc-opt='-I/usr/local/include' \
-        --with-ld-opt='-L/usr/local/lib' \
+        --with-ld-opt='-Wl,-rpath,$LUAJIT_LIB' \
         --add-dynamic-module=/usr/src/ngx_http_geoip2_module \
         --add-module=/usr/src/ngx_devel_kit-$DEVEL_KIT_MODULE_VERSION \
         --add-dynamic-module=/usr/src/lua-nginx-module-$LUA_MODULE_VERSION \
