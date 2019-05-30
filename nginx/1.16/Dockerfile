@@ -4,6 +4,12 @@ MAINTAINER stanzhou "m@sq.mk"
 
 ENV NGINX_VERSION 1.16.0
 
+ENV DEVEL_KIT_MODULE_VERSION 0.3.0
+ENV LUA_MODULE_VERSION 0.10.15
+
+ENV LUAJIT_LIB=/usr/lib
+ENV LUAJIT_INC=/usr/include/luajit-2.0
+
 RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
     && CONFIG="\
         --prefix=/etc/nginx \
@@ -49,8 +55,8 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
         --with-cc-opt='-I/usr/local/include' \
         --with-ld-opt='-L/usr/local/lib' \
         --add-dynamic-module=/usr/src/ngx_http_geoip2_module \
-        --add-module=/usr/src/lua-nginx-module-0.10.15 \
-        --add-module=/usr/src/ngx_devel_kit-0.3.0 \
+        --add-module=/usr/src/ngx_devel_kit-$DEVEL_KIT_MODULE_VERSION \
+        --add-dynamic-module=/usr/src/lua-nginx-module-$LUA_MODULE_VERSION \
         " \
     && addgroup -S nginx \
     && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
@@ -70,12 +76,13 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
         gnupg \
         libxslt-dev \
         gd-dev \
+        luajit-dev \
     && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
     && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
     #lua脚本支持
-    && git clone --recursive  http://luajit.org/git/luajit-2.0.git \
-    && curl -fSL https://github.com/openresty/lua-nginx-module/archive/v0.10.15.tar.gz  -o lua-nginx-module.tar.gz \
-    && curl -fSL https://github.com/simplresty/ngx_devel_kit/archive/v0.3.0.tar.gz  -o ngx_devel_kit.tar.gz \
+    && curl -fSL https://github.com/simpl/ngx_devel_kit/archive/v$DEVEL_KIT_MODULE_VERSION.tar.gz -o ngx_devel_kit.tar.gz \
+    && curl -fSL https://github.com/openresty/lua-nginx-module/archive/v$LUA_MODULE_VERSION.tar.gz -o lua-nginx-module.tar.gz \
+
     #geoip2
     && git clone --recursive https://github.com/maxmind/libmaxminddb.git \
     && git clone --recursive https://github.com/leev/ngx_http_geoip2_module.git \
@@ -102,20 +109,10 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
     && rm -rf libmaxminddb \
     && rm -rf ngx_http_geoip2_module \
     #lua
-    && cp -r ./luajit-2.0 /usr/src \
     && tar -zxC /usr/src -f lua-nginx-module.tar.gz \
     && tar -zxC /usr/src -f ngx_devel_kit.tar.gz \
     && rm lua-nginx-module.tar.gz \
     && rm ngx_devel_kit.tar.gz \
-    && export LUAJIT_LIB=/usr/local/lib \
-    && export LUAJIT_INC=/usr/local/include/luajit-2.0 \
-    && cd /usr/src/luajit-2.0 \
-    && make && make install \
-    && mkdir /etc/ld.so.conf.d \
-    && echo '/usr/local/lib' >> /etc/ld.so.conf.d/lua.conf \
-#    && ldconfig \
-    && cd /usr/src \
-    && rm -rf luajit-2.0 \
     #install
     && export CFLAGS="-O2" \
         CPPFLAGS="-O2" \
@@ -137,8 +134,8 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
     && rm -rf /usr/src/nginx-$NGINX_VERSION \
     && rm -rf /usr/src/libmaxminddb \
     && rm -rf /usr/src/ngx_http_geoip2_module \
-    && rm -rf /usr/src/lua-nginx-module-0.10.15 \
-    && rm -rf /usr/src/ngx_devel_kit-0.3.0 \
+    && rm -rf /usr/src/lua-nginx-module-$LUA_MODULE_VERSION \
+    && rm -rf /usr/src/ngx_devel_kit-$DEVEL_KIT_MODULE_VERSION \
     && apk add --no-cache --virtual .gettext gettext \
     && mv /usr/bin/envsubst /tmp/ \
     && runDeps="$( \
