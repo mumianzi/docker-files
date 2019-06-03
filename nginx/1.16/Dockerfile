@@ -4,11 +4,8 @@ MAINTAINER stanzhou "m@sq.mk"
 
 ENV NGINX_VERSION 1.16.0
 
-ENV DEVEL_KIT_MODULE_VERSION 0.3.0
-ENV LUA_MODULE_VERSION 0.10.15
-
 ENV LUAJIT_LIB=/usr/lib
-ENV LUAJIT_INC=/usr/include/luajit-2.0
+
 
 RUN GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
     && CONFIG="\
@@ -55,8 +52,6 @@ RUN GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
         --with-cc-opt='-I/usr/local/include' \
         --with-ld-opt='-Wl,-rpath,$LUAJIT_LIB' \
         --add-dynamic-module=/usr/src/ngx_http_geoip2_module \
-        --add-module=/usr/src/ngx_devel_kit-$DEVEL_KIT_MODULE_VERSION \
-        --add-dynamic-module=/usr/src/lua-nginx-module-$LUA_MODULE_VERSION \
         " \
     && addgroup -S nginx \
     && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
@@ -76,30 +71,10 @@ RUN GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
         gnupg \
         libxslt-dev \
         gd-dev \
-        luajit-dev \
     && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
-    && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
-    #lua脚本支持
-    && curl -fSL https://github.com/simpl/ngx_devel_kit/archive/v$DEVEL_KIT_MODULE_VERSION.tar.gz -o ngx_devel_kit.tar.gz \
-    && curl -fSL https://github.com/openresty/lua-nginx-module/archive/v$LUA_MODULE_VERSION.tar.gz -o lua-nginx-module.tar.gz \
-
     #geoip2
     && git clone --recursive https://github.com/maxmind/libmaxminddb.git \
     && git clone --recursive https://github.com/leev/ngx_http_geoip2_module.git \
-    && export GNUPGHOME="$(mktemp -d)" \
-    && found=''; \
-    for server in \
-        ha.pool.sks-keyservers.net \
-        hkp://keyserver.ubuntu.com:80 \
-        hkp://p80.pool.sks-keyservers.net:80 \
-        pgp.mit.edu \
-    ; do \
-        echo "Fetching GPG key $GPG_KEYS from $server"; \
-        gpg --keyserver "$server" --keyserver-options timeout=10 --recv-keys "$GPG_KEYS" && found=yes && break; \
-    done; \
-    test -z "$found" && echo >&2 "error: failed to fetch GPG key $GPG_KEYS" && exit 1; \
-    gpg --batch --verify nginx.tar.gz.asc nginx.tar.gz \
-    && rm -r "$GNUPGHOME" nginx.tar.gz.asc \
     && mkdir -p /usr/src \
     && tar -zxC /usr/src -f nginx.tar.gz \
     && rm nginx.tar.gz \
@@ -108,11 +83,6 @@ RUN GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
     && cp -r ./ngx_http_geoip2_module /usr/src \
     && rm -rf libmaxminddb \
     && rm -rf ngx_http_geoip2_module \
-    #lua
-    && tar -zxC /usr/src -f lua-nginx-module.tar.gz \
-    && tar -zxC /usr/src -f ngx_devel_kit.tar.gz \
-    && rm lua-nginx-module.tar.gz \
-    && rm ngx_devel_kit.tar.gz \
     #install
     && export CFLAGS="-O2" \
         CPPFLAGS="-O2" \
@@ -134,8 +104,6 @@ RUN GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
     && rm -rf /usr/src/nginx-$NGINX_VERSION \
     && rm -rf /usr/src/libmaxminddb \
     && rm -rf /usr/src/ngx_http_geoip2_module \
-    && rm -rf /usr/src/lua-nginx-module-$LUA_MODULE_VERSION \
-    && rm -rf /usr/src/ngx_devel_kit-$DEVEL_KIT_MODULE_VERSION \
     && apk add --no-cache --virtual .gettext gettext \
     && mv /usr/bin/envsubst /tmp/ \
     && runDeps="$( \
@@ -148,6 +116,8 @@ RUN GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
     && apk add --no-cache --virtual .nginx-rundeps $runDeps \
     && apk --no-cache add tzdata \
     && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && ln -sf /dev/stdout /var/log/nginx/access.log \
+    && ln -sf /dev/stderr /var/log/nginx/error.log \
     && echo "Asia/Shanghai" > /etc/timezone \
     && addgroup -Sg 82 www-data 2>/dev/null \
     && addgroup nginx www-data 2>/dev/null \
