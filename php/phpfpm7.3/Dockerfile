@@ -4,7 +4,7 @@ MAINTAINER stanzhou "m@sq.mk"
 #ARG ALPINE_REPO=http://dl-cdn.alpinelinux.org
 ARG ALPINE_REPO=https://mirrors.aliyun.com
 ARG URL_PREFIX=
-ARG PROXY_DNS=10.222.0.1
+ARG PROXY_DNS=
 
 
 ENV PHP_PHAR_DIR="${PHP_INI_DIR}/phar"
@@ -88,9 +88,9 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 	\
 # mysqli
 	&& docker-php-ext-configure mysqli \
-		--with-mysql=/usr/bin/mysql_config  \
-		--with-mysqli=mysqlnd \
-		--with-pdo-mysql=mysqlnd \
+#		--with-mysql=/usr/bin/mysql_config  \
+#		--with-mysqli=mysqlnd \
+#		--with-pdo-mysql=mysqlnd \
 	&& docker-php-ext-install -j${NPROC} mysqli \
 	\
 # pdo
