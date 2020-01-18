@@ -1,0 +1,48 @@
+version: '2.4'
+
+networks:
+  internal:
+    driver: bridge
+  public:
+    external:
+      name: gateway
+
+x-define:
+  base: &base
+    restart: always
+    mem_limit: 256M
+    environment:
+      TZ: Asia/Shanghai
+    net: host
+    networks:
+      - public
+      - internal
+    logging:
+      options:
+        max-size: 10m
+        max-file: '2'
+
+services:
+  baota:
+    <<: *base
+    image: mumianzi/baota-panel
+    container_name: baota
+    volumes:
+      - ./data:/www
+    privileged: true
+    labels:
+      traefik.docker.network: gateway
+      traefik.port: '80'
+      traefik.backend: bata-server
+      traefik.enable: "true"
+      traefik.frontend.rule: Host:baota.stanzhou.lan
+      traefik.frontend.rateLimit.extractorFunc: client.ip
+      traefik.frontend.rateLimit.rateSet.1.period: 3s
+      traefik.frontend.rateLimit.rateSet.1.average: 50
+      traefik.frontend.rateLimit.rateSet.1.burst: 80
+      traefik.frontend.rateLimit.rateSet.2.period: 10s
+      traefik.frontend.rateLimit.rateSet.2.average: 120
+      traefik.frontend.rateLimit.rateSet.2.burst: 240
+      traefik.frontend.rateLimit.rateSet.3.period: 60s
+      traefik.frontend.rateLimit.rateSet.3.average: 250
+      traefik.frontend.rateLimit.rateSet.3.burst: 400
