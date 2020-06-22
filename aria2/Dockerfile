@@ -33,8 +33,11 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
   && make install \
   && apk del .build-deps \
   && mkdir -p /etc/aria2 \
-	&& mkdir -p /download \
+	&& mkdir -p /downloads \
   && rm -rf /tmp
+
+  deluser xfs && \
+  addgroup -g 33 -S www-data && adduser -u 33 -D -S -G www-data www-data
 
 EXPOSE $RPC_LISTEN_PORT $BT_LISTEN_PORT $DHT_LISTEN_PORT
 
