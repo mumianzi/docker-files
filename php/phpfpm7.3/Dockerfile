@@ -48,6 +48,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 		opcache \
 		pcntl \
 		sockets \
+		calendar \
 	\
 # gettext
 	&& apk add --no-cache --virtual .build-deps \

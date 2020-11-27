@@ -45,12 +45,13 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
     && chmod +x ${PHP_PHAR_DIR}/composer \
     \
 # 安装扩展
-  && install-php-extensions bcmath exif opcache pcntl sockets \
+  && install-php-extensions bcmath exif opcache pcntl sockets calendar\
      gettext zip gd gmp \
      mysqli pdo_mysql \
      imagick mcrypt \
      redis \
      \
+  && rm -f /usr/bin/install-php-extensions \
 # 增加supervisor
 	&& apk add --no-cache supervisor \
 

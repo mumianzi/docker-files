@@ -1,13 +1,28 @@
 FROM alpine:3.9
 
 MAINTAINER stanzhou "m@sq.mk"
+#可动态使用的模块
+#load_module /usr/lib/nginx/modules/ngx_http_geoip2_module.so;
+#load_module /usr/lib/nginx/modules/ngx_http_headers_more_filter_module.so;
+
+ARG ALPINE_REPO=https://mirrors.aliyun.com
+ARG URL_PREFIX=
 
 ENV NGINX_VERSION 1.16.0
-
+ENV MORE_HEADER_MODULE_VERSION 0.33
+ENV TIMEZONE Asia/Shanghai
 ENV LUAJIT_LIB=/usr/lib
 
 
-RUN GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
+RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
+    && repos=/etc/apk/repositories \
+          && mv -f ${repos} ${repos}_bk \
+    && echo "${URL_PREFIX}${ALPINE_REPO}/alpine/v${ver}/main" > ${repos} \
+    && echo "${URL_PREFIX}${ALPINE_REPO}/alpine/v${ver}/community" >> ${repos} \
+          \
+    && apk add --no-cache tzdata \
+    && ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime \
+    && echo "${TIMEZONE}" > /etc/timezone \GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
     && CONFIG="\
         --prefix=/etc/nginx \
         --sbin-path=/usr/sbin/nginx \
@@ -51,6 +66,8 @@ RUN GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
         --with-stream_ssl_preread_module \
         --with-cc-opt='-I/usr/local/include' \
         --with-ld-opt='-Wl,-rpath,$LUAJIT_LIB' \
+        --add-dynamic-module=/usr/src/headers-more-nginx-module-$MORE_HEADER_MODULE_VERSION \
+        --add-dynamic-module=/usr/src/echo-nginx-module-0.62 \
         --add-dynamic-module=/usr/src/ngx_http_geoip2_module \
         " \
     && addgroup -S nginx \
@@ -83,6 +100,14 @@ RUN GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
     && cp -r ./ngx_http_geoip2_module /usr/src \
     && rm -rf libmaxminddb \
     && rm -rf ngx_http_geoip2_module \
+     #more header module
+    && curl -fSL https://github.com/openresty/headers-more-nginx-module/archive/v$MORE_HEADER_MODULE_VERSION.tar.gz -o headers-more-nginx-module.tar.gz \
+    && tar -zxC /usr/src -f headers-more-nginx-module.tar.gz \
+    && rm headers-more-nginx-module.tar.gz \
+     #echo nginx module
+    && curl -fSL https://github.com/openresty/echo-nginx-module/archive/v0.62.tar.gz -o echo-nginx-module.tar.gz \
+    && tar -zxC /usr/src -f echo-nginx-module.tar.gz \
+    && rm echo-nginx-module.tar.gz \
     #install
     && export CFLAGS="-O2" \
         CPPFLAGS="-O2" \
@@ -114,8 +139,7 @@ RUN GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
             | sort -u \
     )" \
     && apk add --no-cache --virtual .nginx-rundeps $runDeps \
-    && apk --no-cache add tzdata \
-    && ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && mv -f /etc/apk/repositories_bk /etc/apk/repositories \
     && ln -sf /dev/stdout /var/log/nginx/access.log \
     && ln -sf /dev/stderr /var/log/nginx/error.log \
     && echo "Asia/Shanghai" > /etc/timezone \
