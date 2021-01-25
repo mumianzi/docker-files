@@ -4,7 +4,8 @@ MAINTAINER stanzhou "m@sq.mk"
 #ARG ALPINE_REPO=http://dl-cdn.alpinelinux.org
 ARG ALPINE_REPO=https://mirrors.aliyun.com
 ARG URL_PREFIX=
-#ARG PROXY_DNS=10.222.0.1
+#ARG PROXY_DNS=10.1.0.251
+ARG PROXY_DNS=8.8.8.8
 
 
 ENV PHP_PHAR_DIR="${PHP_INI_DIR}/phar"
@@ -27,9 +28,9 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
         \
         && set -xe \
 	&& NPROC=$(getconf _NPROCESSORS_ONLN) \
-## proxy_dns
-#	&& cat /etc/resolv.conf > /etc/resolv.conf.bak \
-#	&& echo 'nameserver ${PROXY_DNS}' >> /etc/resolv.conf \
+# proxy_dns
+	&& cat /etc/resolv.conf > /etc/resolv.conf.bak \
+	&& echo 'nameserver ${PROXY_DNS}' >> /etc/resolv.conf \
 # phar
         && mkdir ${PHP_PHAR_DIR} \
         && EXPECTED_SIGNATURE=$(curl -fsSL ${URL_PREFIX}https://composer.github.io/installer.sig) \
@@ -84,8 +85,8 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 #	&& curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
 # end
 	&& apk del -f .build-deps \
-#	&& cat /etc/resolv.conf.bak > /etc/resolv.conf \
-#	&& rm -f /etc/resolv.conf.bak \
+	&& cat /etc/resolv.conf.bak > /etc/resolv.conf \
+	&& rm -f /etc/resolv.conf.bak \
 	&& rm -rf /var/cache/apk/* \
 	&& rm -rf /usr/local/src/* \
 	&& mv -f ${repos}_bk ${repos}
