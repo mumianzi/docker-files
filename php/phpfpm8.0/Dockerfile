@@ -50,7 +50,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
      gettext zip gd gmp \
      mysqli pdo_mysql \
      imagick mcrypt \
-     redis \
+     redis yaml\
      \
   && rm -f /usr/bin/install-php-extensions \
 # 增加supervisor

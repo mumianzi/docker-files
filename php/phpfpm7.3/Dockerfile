@@ -19,7 +19,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 	&& echo "@edge ${URL_PREFIX}${ALPINE_REPO}/alpine/edge/main" >> ${repos} \
 	&& echo "@testing ${URL_PREFIX}${ALPINE_REPO}/alpine/edge/testing" >> ${repos} \
         \
-	&& apk add --no-cache tzdata \
+	&& apk add --no-cache tzdata gmp-dev\
 	&& ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime \
 	&& echo "${TIMEZONE}" > /etc/timezone \
         \
@@ -49,6 +49,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 		pcntl \
 		sockets \
 		calendar \
+		gmp \
 	\
 # gettext
 	&& apk add --no-cache --virtual .build-deps \
