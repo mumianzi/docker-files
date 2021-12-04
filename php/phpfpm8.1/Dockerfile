@@ -6,9 +6,6 @@ ARG ALPINE_REPO=https://mirrors.aliyun.com
 ARG URL_PREFIX=
 ARG PROXY_DNS=10.1.0.251
 
-
-ENV PHP_PHAR_DIR="${PHP_INI_DIR}/phar"
-ENV PATH="${PATH}:${PHP_PHAR_DIR}"
 ENV TIMEZONE="Asia/Shanghai"
 
 #扩展安装脚本
@@ -21,40 +18,34 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 	&& echo "${URL_PREFIX}${ALPINE_REPO}/alpine/v${ver}/community" >> ${repos} \
 	&& echo "@edge ${URL_PREFIX}${ALPINE_REPO}/alpine/edge/main" >> ${repos} \
 	&& echo "@testing ${URL_PREFIX}${ALPINE_REPO}/alpine/edge/testing" >> ${repos} \
-        \
-	&& apk add --no-cache tzdata curl php-curl \
-	&& ln -sf /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2 \
+  && apk add --no-cache tzdata libzip \
+#	&& ln -sf /lib/libc.musl-x86_64.so.1 /lib/ld-linux-x86-64.so.2 \
 	&& ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime \
 	&& echo "${TIMEZONE}" > /etc/timezone \
         \
-        && set -xe \
-	&& NPROC=$(getconf _NPROCESSORS_ONLN) \
-## proxy_dns
-#	&& cat /etc/resolv.conf > /etc/resolv.conf.bak \
-#	&& echo 'nameserver ${PROXY_DNS}' >> /etc/resolv.conf \
-# phar
-    && mkdir ${PHP_PHAR_DIR} \
-    && EXPECTED_SIGNATURE=$(curl -fsSL ${URL_PREFIX}https://composer.github.io/installer.sig) \
-    && php -r "copy('${URL_PREFIX}https://getcomposer.org/installer', 'composer-setup.php');" \
-    && ACTUAL_SIGNATURE=$(php -r "echo hash_file('SHA384', 'composer-setup.php');") \
-    && if [ "${EXPECTED_SIGNATURE}" != "${ACTUAL_SIGNATURE}" ]; then \
-            >&2 echo 'ERROR: Invalid installer signature'; \
-            exit 1; \
-    fi \
-    && php composer-setup.php --install-dir=${PHP_PHAR_DIR} --filename=composer \
-    && rm composer-setup.php \
-    && chmod +x ${PHP_PHAR_DIR}/composer \
-    \
-# 安装扩展
-  && install-php-extensions bcmath exif opcache pcntl sockets calendar\
-     gettext zip gd gmp \
-     mysqli pdo_mysql \
-     imagick mcrypt \
-     redis yaml\
+  && set -xe \
+  && NPROC=$(getconf _NPROCESSORS_ONLN) \
+  && apk add --no-cache  --virtual .build-deps \
+     shadow gettext-dev \
+     libpng libpng-dev gmp-dev libjpeg-turbo-dev libzip-dev \
+# 安装扩展 \
+#  && docker-php-ext-configure gd --with-freetype --with-jpeg \
+  && docker-php-ext-install bcmath exif opcache pcntl sockets zip gd gmp mysqli pdo_mysql gettext \
+  && install-php-extensions imagick mcrypt \
+     redis yaml \
      \
   && rm -f /usr/bin/install-php-extensions \
-#	&& cat /etc/resolv.conf.bak > /etc/resolv.conf \
-#  && rm -f /etc/resolv.conf.bak \
+# 更改配置
+	&& usermod -u 82 www-data \
+	&& groupmod -g 82 www-data \
+  && mkdir /socks \
+  && chown www-data:www-data /socks \
+  && sed -i 's/^listen = 9000$/listen = \/socks\/php-fpm\.sock/g' /usr/local/etc/php-fpm.d/zz-docker.conf \
+  && sed -i '$a listen\.mode = 0660' /usr/local/etc/php-fpm.d/zz-docker.conf \
+  && cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini \
+  && sed -i 's/^disable_functions =$/disable_functions = exec,shell_exec,system,curl_multi_exec,parse_ini_file,show_source/g' /usr/local/etc/php/php.ini \
+  \
+  && apk del .build-deps \
 	&& rm -rf /var/cache/apk/* \
 	&& rm -rf /usr/local/src/* \
 	&& mv -f ${repos}_bk ${repos}

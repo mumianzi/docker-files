@@ -1,4 +1,4 @@
-FROM alpine:3.9
+FROM alpine:3.15
 
 MAINTAINER stanzhou "m@sq.mk"
 #可动态使用的模块
@@ -8,7 +8,7 @@ MAINTAINER stanzhou "m@sq.mk"
 ARG ALPINE_REPO=https://mirrors.aliyun.com
 ARG URL_PREFIX=
 
-ENV NGINX_VERSION 1.19.2
+ENV NGINX_VERSION 1.21.4
 ENV MORE_HEADER_MODULE_VERSION 0.33
 ENV TIMEZONE Asia/Shanghai
 ENV LUAJIT_LIB=/usr/lib
@@ -71,7 +71,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
         --add-dynamic-module=/usr/src/ngx_http_geoip2_module \
         " \
     && addgroup -S nginx \
-    && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
+    && adduser -u 82 -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \
     && apk add --no-cache --virtual .build-deps \
         gcc \
         libc-dev \
@@ -88,6 +88,12 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
         gnupg \
         libxslt-dev \
         gd-dev \
+        geoip-dev \
+        perl-dev \
+        libedit-dev \
+        bash \
+        alpine-sdk \
+        findutils \
     && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
     #geoip2
     && git clone --recursive https://github.com/maxmind/libmaxminddb.git \
