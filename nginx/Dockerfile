@@ -23,13 +23,55 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
        \
   && set -xe \
   && NPROC=$(getconf _NPROCESSORS_ONLN) \
-  && apk add --no-cache  --virtual .build-deps \
-    shadow gettext-dev libzip libzip-dev \
-      \
-# 更改配置
-  && usermod -u 82 nginx \
-#  && groupmod -g 82 nginx \
+  && CONFIG="\
+     --prefix=/etc/nginx \
+      --sbin-path=/usr/sbin/nginx \
+      --modules-path=/usr/lib/nginx/modules \
+      --conf-path=/etc/nginx/nginx.conf \
+      --error-log-path=/var/log/nginx/error.log \
+      --http-log-path=/var/log/nginx/access.log \
+      --pid-path=/var/run/nginx.pid \
+      --lock-path=/var/run/nginx.lock \
+      --http-client-body-temp-path=/var/cache/nginx/client_temp \
+      --http-proxy-temp-path=/var/cache/nginx/proxy_temp \
+      --http-fastcgi-temp-path=/var/cache/nginx/fastcgi_temp \
+      --http-uwsgi-temp-path=/var/cache/nginx/uwsgi_temp \
+      --http-scgi-temp-path=/var/cache/nginx/scgi_temp \
+      --with-perl_modules_path=/usr/lib/perl5/vendor_perl \
+      --user=nginx \
+      --group=nginx \
+      --with-compat \
+      --with-file-aio \
+      --with-threads \
+      --with-http_addition_module \
+      --with-http_auth_request_module \
+      --with-http_dav_module \
+      --with-http_flv_module \
+      --with-http_gunzip_module \
+      --with-http_gzip_static_module \
+      --with-http_mp4_module \
+      --with-http_random_index_module \
+      --with-http_realip_module \
+      --with-http_secure_link_module \
+      --with-http_slice_module \
+      --with-http_ssl_module \
+      --with-http_stub_status_module \
+      --with-http_sub_module \
+      --with-http_v2_module \
+      --with-mail \
+      --with-mail_ssl_module \
+      --with-stream \
+      --with-stream_realip_module \
+      --with-stream_ssl_module \
+      --with-stream_ssl_preread_module \
+      --with-cc-opt='-I/usr/local/include' \
+      --with-ld-opt='-Wl,--as-needed,-O1,--sort-common' \
+      --add-dynamic-module=/usr/src/headers-more-nginx-module-$MORE_HEADER_MODULE_VERSION \
+      --add-dynamic-module=/usr/src/echo-nginx-module-0.62 \
+      --add-dynamic-module=/usr/src/ngx_http_geoip2_module \
+        " \
   && apk add --no-cache --virtual .build-deps \
+    	shadow \
       gcc \
       libc-dev \
       git \
@@ -72,8 +114,21 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
   && tar -zxC /usr/src -f echo-nginx-module.tar.gz \
   && rm echo-nginx-module.tar.gz \
   \
-
-
+  #install
+  && export CFLAGS="-O2" \
+      CPPFLAGS="-O2" \
+      LDFLAGS="-O2" \
+  && cd /usr/src/libmaxminddb \
+  && ./bootstrap \
+  && ./configure \
+  && make -j$(getconf _NPROCESSORS_ONLN) \
+  && make install \
+  && cd /usr/src/nginx-$NGINX_VERSION \
+  && ./configure $CONFIG \
+  && make -j$(getconf _NPROCESSORS_ONLN) \
+  && cp -f /usr/src/nginx-1.21.4/objs/nginx /usr/sbin/nginx
+# 更改配置
+  && usermod -u 82 nginx \
   && apk del .build-deps \
   && rm -rf /var/cache/apk/* \
   && rm -rf /usr/local/src/* \
