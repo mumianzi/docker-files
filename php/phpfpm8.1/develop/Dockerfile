@@ -77,14 +77,14 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
   && rm -rf /tmp/mongodb \
 	\
 # swoole
-  && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/swoole" -o swoole.tgz \
-  && mkdir -p /tmp/swoole \
-  && tar -xf swoole.tgz -C /tmp/swoole --strip-components=1 \
-  && rm swoole.tgz \
-  && docker-php-ext-configure /tmp/swoole --enable-swoole \
-  && docker-php-ext-install -j${NPROC} /tmp/swoole \
-  && rm -rf /tmp/swoole \
-	\
+#  && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/swoole" -o swoole.tgz \
+#  && mkdir -p /tmp/swoole \
+#  && tar -xf swoole.tgz -C /tmp/swoole --strip-components=1 \
+#  && rm swoole.tgz \
+#  && docker-php-ext-configure /tmp/swoole --enable-swoole \
+#  && docker-php-ext-install -j${NPROC} /tmp/swoole \
+#  && rm -rf /tmp/swoole \
+#	\
 # end
 	&& apk del -f .build-deps \
 #	&& cat /etc/resolv.conf.bak > /etc/resolv.conf \
