@@ -1,11 +1,11 @@
-FROM nginx:1.21.4-alpine
+FROM nginx:1.21.6-alpine
 
 MAINTAINER stanzhou "m@sq.mk"
 
 ARG ALPINE_REPO=https://mirrors.aliyun.com
 ARG URL_PREFIX=
 
-ENV NGINX_VERSION 1.21.4
+ENV NGINX_VERSION 1.21.6
 ENV MORE_HEADER_MODULE_VERSION 0.33
 ENV TIMEZONE Asia/Shanghai
 ENV LUAJIT_LIB=/usr/lib
@@ -81,7 +81,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
       libtool \
       linux-headers \
       openssl-dev \
-      pcre-dev \
+      pcre2-dev \
       zlib-dev \
       curl \
       gnupg \
@@ -126,7 +126,11 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
   && cd /usr/src/nginx-$NGINX_VERSION \
   && ./configure $CONFIG \
   && make -j$(getconf _NPROCESSORS_ONLN) \
-  && cp -f /usr/src/nginx-1.21.4/objs/nginx /usr/sbin/nginx
+  && cp -f /usr/src/nginx-$NGINX_VERSION/objs/*.so /usr/lib/nginx/modules/ \
+#  && cp -f /usr/src/nginx-$NGINX_VERSION/objs/ngx_http_headers_more_filter_module.so /usr/lib/nginx/modules/ \
+#  && cp -f /usr/src/nginx-$NGINX_VERSION/objs/ngx_http_geoip2_module.so /usr/lib/nginx/modules/ \
+#  && cp -f /usr/src/nginx-$NGINX_VERSION/objs/ngx_stream_geoip2_module.so /usr/lib/nginx/modules/ \
+  && cp -f /usr/src/nginx-$NGINX_VERSION/objs/nginx /usr/sbin/nginx \
 # 更改配置
   && usermod -u 82 nginx \
   && apk del .build-deps \
