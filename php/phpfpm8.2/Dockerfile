@@ -1,4 +1,4 @@
-FROM php:8.1-fpm-alpine
+FROM php:8.2-fpm-alpine
 MAINTAINER stanzhou "m@sq.mk"
 
 #ARG ALPINE_REPO=http://dl-cdn.alpinelinux.org
@@ -46,7 +46,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 # 安装扩展 \
 #  && docker-php-ext-configure gd --with-freetype --with-jpeg \
   && docker-php-ext-install bcmath exif opcache pcntl sockets zip gd gmp mysqli pdo_mysql gettext \
-  && install-php-extensions imagick mcrypt \
+  && install-php-extensions imagick \
      redis yaml \
      \
   && rm -f /usr/bin/install-php-extensions \

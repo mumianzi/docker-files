@@ -1,4 +1,4 @@
-FROM mumianzi/php:8.1-fpm-alpine
+FROM mumianzi/php:8.2-fpm-alpine
 MAINTAINER stanzhou "m@sq.mk"
 
 #ARG ALPINE_REPO=http://dl-cdn.alpinelinux.org
@@ -7,6 +7,9 @@ ARG URL_PREFIX=
 #mac上此处设置貌似无效，可以设置 deamon.json 里的 dns 项
 #ARG PROXY_DNS=10.1.0.251
 
+
+ENV PHP_PHAR_DIR="${PHP_INI_DIR}/phar"
+ENV PATH="${PATH}:${PHP_PHAR_DIR}"
 ENV TIMEZONE="Asia/Shanghai"
 #扩展安装脚本
 #COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/bin/
