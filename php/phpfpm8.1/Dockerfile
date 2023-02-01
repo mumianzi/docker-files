@@ -6,6 +6,7 @@ ARG ALPINE_REPO=https://mirrors.aliyun.com
 ARG URL_PREFIX=
 ARG PROXY_DNS=10.1.0.251
 
+ENV DEFAULT_COMPOSER_VER=2.5.1
 ENV PHP_PHAR_DIR="${PHP_INI_DIR}/phar"
 ENV PATH="${PATH}:${PHP_PHAR_DIR}"
 ENV TIMEZONE="Asia/Shanghai"
@@ -29,20 +30,27 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
   && NPROC=$(getconf _NPROCESSORS_ONLN) \
 # phar composer
   && mkdir ${PHP_PHAR_DIR} \
-  && EXPECTED_SIGNATURE=$(curl -fsSL ${URL_PREFIX}https://composer.github.io/installer.sig) \
-  && php -r "copy('${URL_PREFIX}https://getcomposer.org/installer', 'composer-setup.php');" \
-  && ACTUAL_SIGNATURE=$(php -r "echo hash_file('SHA384', 'composer-setup.php');") \
-  && if [ "${EXPECTED_SIGNATURE}" != "${ACTUAL_SIGNATURE}" ]; then \
-          >&2 echo 'ERROR: Invalid installer signature'; \
-          exit 1; \
-  fi \
-  && php composer-setup.php --install-dir=${PHP_PHAR_DIR} --filename=composer \
-  && rm composer-setup.php \
+# 政治化版 \
+#  && EXPECTED_SIGNATURE=$(curl -fsSL ${URL_PREFIX}https://composer.github.io/installer.sig) \
+#  && php -r "copy('${URL_PREFIX}https://getcomposer.org/installer', 'composer-setup.php');" \
+#  && ACTUAL_SIGNATURE=$(php -r "echo hash_file('SHA384', 'composer-setup.php');") \
+#  && if [ "${EXPECTED_SIGNATURE}" != "${ACTUAL_SIGNATURE}" ]; then \
+#          >&2 echo 'ERROR: Invalid installer signature'; \
+#          exit 1; \
+#  fi \
+#  && php composer-setup.php --install-dir=${PHP_PHAR_DIR} --filename=composer \
+#  && rm composer-setup.php \
+  && COMPOSER_VER=`curl -s https://api.github.com/repos/composer/composer/releases/latest | grep "tag_name"  | head -n 1 | cut -d '"' -f4` \
+  && COMPOSER_VER=${COMPOSER_VER:-${DEFAULT_COMPOSER_VER}} \
+  && curl -fsSL https://github.com/composer/composer/releases/download/${COMPOSER_VER}/composer.phar  -o ${PHP_PHAR_DIR}/composer \
+# 非政治化版本 \
+#  && curl -fsSL https://github.com/open-composer/composer/releases/download/2.2.9/composer.phar -o ${PHP_PHAR_DIR}/composer \
   && chmod +x ${PHP_PHAR_DIR}/composer \
     \
-  && apk add --no-cache  --virtual .build-deps \
-     shadow gettext-dev \
-     libpng libpng-dev gmp-dev libjpeg-turbo-dev libzip-dev \
+  && apk add --no-cache --virtual .build-deps \
+          shadow gettext-dev \
+          libpng libpng-dev gmp-dev libjpeg-turbo-dev libzip-dev \
+  \
 # 安装扩展 \
 #  && docker-php-ext-configure gd --with-freetype --with-jpeg \
   && docker-php-ext-install bcmath exif opcache pcntl sockets zip gd gmp mysqli pdo_mysql gettext \
