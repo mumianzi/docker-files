@@ -6,7 +6,7 @@ ARG ALPINE_REPO=https://mirrors.aliyun.com
 ARG URL_PREFIX=
 ARG PROXY_DNS=10.1.0.251
 
-ENV DEFAULT_COMPOSER_VER=2.5.1
+ENV DEFAULT_COMPOSER_VER=2.5.2
 ENV PHP_PHAR_DIR="${PHP_INI_DIR}/phar"
 ENV PATH="${PATH}:${PHP_PHAR_DIR}"
 ENV TIMEZONE="Asia/Shanghai"
@@ -40,9 +40,9 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
     \
   && apk add --no-cache --virtual .build-deps \
           shadow gettext-dev \
-          libpng libpng-dev gmp-dev libjpeg-turbo-dev libzip-dev \
+          libpng libpng-dev gmp-dev libjpeg-turbo-dev libzip-dev freetype-dev \
 # 安装扩展 \
-#  && docker-php-ext-configure gd --with-freetype --with-jpeg \
+  && docker-php-ext-configure gd --with-freetype --with-jpeg \
   && docker-php-ext-install bcmath exif opcache pcntl zip gd gmp mysqli pdo_mysql gettext \
   && install-php-extensions imagick sockets \
      redis yaml \
