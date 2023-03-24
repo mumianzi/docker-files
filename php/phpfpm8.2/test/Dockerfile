@@ -12,7 +12,7 @@ ENV PATH="${PATH}:${PHP_PHAR_DIR}"
 ENV TIMEZONE="Asia/Shanghai"
 
 #扩展安装脚本
-COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/bin/
+#COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/bin/
 
 RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 	&& repos=/etc/apk/repositories \
@@ -41,13 +41,47 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
   && apk add --no-cache --virtual .build-deps \
           shadow gettext-dev \
           libpng libpng-dev gmp-dev libjpeg-turbo-dev libzip-dev freetype-dev \
+          make autoconf gcc g++ imagemagick-dev yaml-dev linux-headers \
 # 安装扩展 \
   && docker-php-ext-configure gd --with-freetype --with-jpeg \
-  && docker-php-ext-install bcmath exif opcache pcntl zip gd gmp mysqli pdo_mysql gettext \
-  && install-php-extensions imagick sockets \
-     redis yaml \
-     \
-  && rm -f /usr/bin/install-php-extensions \
+  && docker-php-ext-install bcmath exif opcache pcntl zip gd gmp mysqli pdo_mysql gettext sockets \
+#  && install-php-extensions imagick \
+#     redis yaml \
+#     \
+#  && rm -f /usr/bin/install-php-extensions \
+# imagick
+  && cd /tmp && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/imagick" -o imagick.tgz \
+	&& mkdir -p /tmp/imagick \
+  && tar -xf imagick.tgz -C /tmp/imagick --strip-components=1 \
+  && docker-php-ext-configure /tmp/imagick \
+  && docker-php-ext-install /tmp/imagick \
+  && rm -rf /tmp/imagick /tmp/imagick.tgz  \
+	\
+# redis
+  && cd /tmp && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/redis" -o redis.tgz \
+	&& mkdir -p /tmp/redis \
+  && tar -xf redis.tgz -C /tmp/redis --strip-components=1 \
+  && rm redis.tgz \
+  && docker-php-ext-configure /tmp/redis \
+  && docker-php-ext-install /tmp/redis \
+  && rm -rf /tmp/redis /tmp/redis.tgz  \
+	\
+# yaml
+  && cd /tmp && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/yaml" -o yaml.tgz \
+	&& mkdir -p /tmp/yaml \
+  && tar -xf yaml.tgz -C /tmp/yaml --strip-components=1 \
+  && docker-php-ext-configure /tmp/yaml \
+  && docker-php-ext-install /tmp/yaml \
+  && rm -rf /tmp/yaml /tmp/yaml.tgz  \
+	\
+# mongodb
+  && cd /tmp && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/mongodb" -o mongodb.tgz \
+  && mkdir -p /tmp/mongodb \
+  && tar -xf mongodb.tgz -C /tmp/mongodb --strip-components=1 \
+  && docker-php-ext-configure /tmp/mongodb --enable-mongodb \
+  && docker-php-ext-install -j${NPROC} /tmp/mongodb \
+  && rm -rf /tmp/mongodb /tmp/mongodb.tgz  \
+	\
 # 更改配置
 	&& usermod -u 82 www-data \
 	&& groupmod -g 82 www-data \
@@ -61,5 +95,6 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
   \
   && apk del .build-deps \
 	&& rm -rf /var/cache/apk/* \
+	&& rm -rf /tmp/pear \
 	&& rm -rf /usr/local/src/* \
 	&& mv -f ${repos}_bk ${repos}
