@@ -45,7 +45,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 #imagick 和 gd 都是图片处理，但imagick会导致image体积太大，所以不安装imagick了 \
 #  && docker-php-ext-configure gd --with-freetype --with-jpeg \
 #  && docker-php-ext-install bcmath exif opcache pcntl zip gd gmp mysqli pdo_mysql gettext \
-  && install-php-extensions bcmath exif opcache pcntl zip gd gmp mysqli pdo_mysql gettext \
+  && install-php-extensions bcmath exif opcache pcntl zip gd gmp pdo_mysql gettext \
     sockets redis yaml \
      \
   && rm -f /usr/bin/install-php-extensions \
