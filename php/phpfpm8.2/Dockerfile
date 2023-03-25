@@ -1,8 +1,8 @@
 FROM php:8.2-fpm-alpine
 MAINTAINER stanzhou "m@sq.mk"
 
-#ARG ALPINE_REPO=http://dl-cdn.alpinelinux.org
-ARG ALPINE_REPO=https://mirrors.aliyun.com
+ARG ALPINE_REPO=https://dl-cdn.alpinelinux.org
+#ARG ALPINE_REPO=https://mirrors.aliyun.com
 ARG URL_PREFIX=
 ARG PROXY_DNS=10.1.0.251
 
@@ -38,24 +38,31 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 #  && curl -fsSL https://github.com/open-composer/composer/releases/download/2.2.9/composer.phar -o ${PHP_PHAR_DIR}/composer \
   && chmod +x ${PHP_PHAR_DIR}/composer \
     \
-  && apk add --no-cache --virtual .build-deps \
-          shadow gettext-dev \
-          libpng libpng-dev gmp-dev libjpeg-turbo-dev libzip-dev freetype-dev \
-# 安装扩展 \
-  && docker-php-ext-configure gd --with-freetype --with-jpeg \
-  && docker-php-ext-install bcmath exif opcache pcntl zip gd gmp mysqli pdo_mysql gettext \
-  && install-php-extensions imagick sockets \
-     redis yaml \
+#  && apk add --no-cache --virtual .build-deps \
+#          shadow gettext-dev \
+#          libpng libpng-dev gmp-dev libjpeg-turbo-dev libzip-dev freetype-dev \
+# 安装扩展  # laravel 必须bcmath pdo_mysql，其他基础镜像已有 \
+#imagick 和 gd 都是图片处理，但imagick会导致image体积太大，所以不安装imagick了 \
+#  && docker-php-ext-configure gd --with-freetype --with-jpeg \
+#  && docker-php-ext-install bcmath exif opcache pcntl zip gd gmp mysqli pdo_mysql gettext \
+  && install-php-extensions bcmath exif opcache pcntl zip gd gmp mysqli pdo_mysql gettext \
+    sockets redis yaml \
      \
   && rm -f /usr/bin/install-php-extensions \
-# 更改配置
+# mongodb
+  && apk add --no-cache --virtual .build-deps linux-headers  \
+  && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/mongodb" -o mongodb.tgz \
+  && mkdir -p /tmp/mongodb \
+  && tar -xf mongodb.tgz -C /tmp/mongodb --strip-components=1 \
+  && rm mongodb.tgz \
+  && docker-php-ext-configure /tmp/mongodb --enable-mongodb \
+  && docker-php-ext-install -j${NPROC} /tmp/mongodb \
+  && rm -rf /tmp/mongodb \
+# 更改配置 \
+  && apk add --no-cache --virtual .build-deps shadow \
 	&& usermod -u 82 www-data \
 	&& groupmod -g 82 www-data \
   #socks 不便于水平扩展
-#  && mkdir /socks \
-#  && chown www-data:www-data /socks \
-#  && sed -i 's/^listen = 9000$/listen = \/socks\/php-fpm\.sock/g' /usr/local/etc/php-fpm.d/zz-docker.conf \
-#  && sed -i '$a listen\.mode = 0660' /usr/local/etc/php-fpm.d/zz-docker.conf \
   && cp /usr/local/etc/php/php.ini-production /usr/local/etc/php/php.ini \
   && sed -i 's/^disable_functions =$/disable_functions = exec,shell_exec,system,curl_multi_exec,parse_ini_file,show_source/g' /usr/local/etc/php/php.ini \
   \

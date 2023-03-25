@@ -35,9 +35,9 @@ RUN ln -sf /usr/share/zoneinfo/${TIMEZONE} /etc/localtime \
 #  docker-php-ext-install bcmath exif opcache pcntl zip gd gmp mysqli pdo_mysql gettext sockets; \
   curl -sSLf \
         -o /usr/local/bin/install-php-extensions \
-        https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions; \
+        https://ghproxy.com/https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions; \
   chmod +x /usr/local/bin/install-php-extensions; \
-  install-php-extensions imagick @composer gd bcmath exif opcache pcntl zip gmp mysqli pdo_mysql gettext sockets redis yaml; \
+  install-php-extensions imagick @composer gd bcmath opcache pcntl zip gmp mysqli pdo_mysql gettext sockets redis yaml; \
 #     \
   rm -f /usr/local/bin/install-php-extensions; \
 ## 更改配置
