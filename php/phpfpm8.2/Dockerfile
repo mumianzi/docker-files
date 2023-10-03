@@ -6,7 +6,7 @@ ARG ALPINE_REPO=https://dl-cdn.alpinelinux.org
 ARG URL_PREFIX=
 ARG PROXY_DNS=10.1.0.251
 
-ENV DEFAULT_COMPOSER_VER=2.5.5
+ENV DEFAULT_COMPOSER_VER=2.6.4
 ENV PHP_PHAR_DIR="${PHP_INI_DIR}/phar"
 ENV PATH="${PATH}:${PHP_PHAR_DIR}"
 ENV TIMEZONE="Asia/Shanghai"
@@ -49,13 +49,26 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
     sockets redis yaml \
      \
   && rm -f /usr/bin/install-php-extensions \
-# mongodb
-  && apk add --no-cache --virtual .build-deps linux-headers  \
+# mongodb 支持3.6版本以下扩展
+  && apk add --no-cache --virtual .build-deps linux-headers curl-dev openssl openssl-dev \
+  && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/mongodb-1.12.1.tgz" -o mongodb.tgz \
+  && mkdir -p /tmp/mongodb \
+  && tar -xf mongodb.tgz -C /tmp/mongodb --strip-components=1 \
+  && rm -f mongodb.tgz \
+  && docker-php-ext-configure /tmp/mongodb --enable-mongodb --with-mongodb-ssl=auto \
+  && docker-php-ext-install -j${NPROC} /tmp/mongodb \
+  && mv /usr/local/lib/php/extensions/no-debug-non-zts-20220829/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20220829/mongodb.old.so \
+  #先禁用，需要时再启用，
+  && sed -i 's/^/;/' /usr/local/etc/php/conf.d/docker-php-ext-mongodb.ini \
+  && rm -rf /tmp/mongodb \
+    \
+# mongodb 最新版本
+  && apk add --no-cache --virtual .build-deps linux-headers curl-dev openssl openssl-dev \
   && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/mongodb" -o mongodb.tgz \
   && mkdir -p /tmp/mongodb \
   && tar -xf mongodb.tgz -C /tmp/mongodb --strip-components=1 \
   && rm -f mongodb.tgz \
-  && docker-php-ext-configure /tmp/mongodb --enable-mongodb \
+  && docker-php-ext-configure /tmp/mongodb --enable-mongodb --with-mongodb-ssl=auto \
   && docker-php-ext-install -j${NPROC} /tmp/mongodb \
   #先禁用，需要时再启用，
   && sed -i 's/^/;/' /usr/local/etc/php/conf.d/docker-php-ext-mongodb.ini \
@@ -92,4 +105,5 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
   && apk del .build-deps \
 	&& rm -rf /var/cache/apk/* \
 	&& rm -rf /usr/local/src/* \
+	&& rm -rf /usr/src/* \
 	&& mv -f ${repos}_bk ${repos}
