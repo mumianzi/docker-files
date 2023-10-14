@@ -11,4 +11,4 @@
 #ENV LUAJIT_LIB=/usr/lib
 #
 ## docker
-docker tag mumianzi/nginx:1.24-alpine mumianzi/nginx:1-alpine
+#docker tag mumianzi/nginx:1.24-alpine mumianzi/nginx:1-alpine

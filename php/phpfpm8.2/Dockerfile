@@ -1,4 +1,4 @@
-FROM php:8.2-fpm-alpine
+FROM --platform=${TARGETPLATFORM} php:8.2-fpm-alpine
 MAINTAINER stanzhou "m@sq.mk"
 
 ARG ALPINE_REPO=https://dl-cdn.alpinelinux.org
