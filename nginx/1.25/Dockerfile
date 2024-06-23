@@ -5,7 +5,7 @@ MAINTAINER stanzhou "m@sq.mk"
 ARG ALPINE_REPO=https://mirrors.aliyun.com
 ARG URL_PREFIX=
 
-ENV NGINX_VERSION 1.25.0
+ENV NGINX_VERSION 1.25.5
 ENV MORE_HEADER_MODULE_VERSION 0.34
 ENV ECHO_NGINX_MODULE_VERSION 0.63
 ENV TIMEZONE Asia/Shanghai
@@ -136,6 +136,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
   && cp -f /usr/src/nginx-$NGINX_VERSION/objs/nginx /usr/sbin/nginx \
 # 更改配置
   && usermod -u 82 nginx \
+  && usermod -a -G www-data nginx \
   && apk del .build-deps \
   && rm -rf /var/cache/apk/* \
   && rm -rf /usr/local/src/* \

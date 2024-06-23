@@ -1,4 +1,4 @@
-FROM --platform=${TARGETPLATFORM} php:8.2-fpm-alpine
+FROM --platform=${TARGETPLATFORM} php:8.3-fpm-alpine
 MAINTAINER stanzhou "m@sq.mk"
 
 ARG ALPINE_REPO=https://dl-cdn.alpinelinux.org
@@ -49,19 +49,19 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
     sockets redis yaml \
      \
   && rm -f /usr/bin/install-php-extensions \
-# mongodb 支持3.6版本以下扩展
-  && apk add --no-cache --virtual .build-deps linux-headers curl-dev openssl openssl-dev \
-  && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/mongodb-1.12.1.tgz" -o mongodb.tgz \
-  && mkdir -p /tmp/mongodb \
-  && tar -xf mongodb.tgz -C /tmp/mongodb --strip-components=1 \
-  && rm -f mongodb.tgz \
-  && docker-php-ext-configure /tmp/mongodb --enable-mongodb --with-mongodb-ssl=auto \
-  && docker-php-ext-install -j${NPROC} /tmp/mongodb \
-  && mv /usr/local/lib/php/extensions/no-debug-non-zts-20220829/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20220829/mongodb.old.so \
-  #先禁用，需要时再启用，
-  && sed -i 's/^/;/' /usr/local/etc/php/conf.d/docker-php-ext-mongodb.ini \
-  && rm -rf /tmp/mongodb \
-    \
+## mongodb 支持3.6版本以下扩展
+#  && apk add --no-cache --virtual .build-deps linux-headers curl-dev openssl openssl-dev \
+#  && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/mongodb-1.12.1.tgz" -o mongodb.tgz \
+#  && mkdir -p /tmp/mongodb \
+#  && tar -xf mongodb.tgz -C /tmp/mongodb --strip-components=1 \
+#  && rm -f mongodb.tgz \
+#  && docker-php-ext-configure /tmp/mongodb --enable-mongodb --with-mongodb-ssl=auto \
+#  && docker-php-ext-install -j${NPROC} /tmp/mongodb \
+#  && mv /usr/local/lib/php/extensions/no-debug-non-zts-20220829/mongodb.so /usr/local/lib/php/extensions/no-debug-non-zts-20220829/mongodb.old.so \
+#  #先禁用，需要时再启用，
+#  && sed -i 's/^/;/' /usr/local/etc/php/conf.d/docker-php-ext-mongodb.ini \
+#  && rm -rf /tmp/mongodb \
+#    \
 # mongodb 最新版本
   && apk add --no-cache --virtual .build-deps linux-headers curl-dev openssl openssl-dev \
   && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/mongodb" -o mongodb.tgz \
