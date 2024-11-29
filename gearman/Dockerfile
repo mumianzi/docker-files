@@ -4,10 +4,8 @@ MAINTAINER stanzhou "stanzhou@zhen22.com"
 ARG ALPINE_REPO=https://mirrors.aliyun.com
 ARG URL_PREFIX=
 
-ENV PHP_PHAR_DIR="${PHP_INI_DIR}/phar"
-ENV PATH="${PATH}:${PHP_PHAR_DIR}"
 ENV TIMEZONE="Asia/Shanghai" \
-        GEARMAND_VERSION="1.1.8"\
+        GEARMAND_VERSION="1.1.8" \
         GEARMAN_USER=gearman \
         GEARMAN_GROUP=gearman \
         ETC_DIR=/etc/gearman \

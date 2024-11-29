@@ -1,5 +1,5 @@
-FROM php:8.3-fpm-alpine
-#FROM --platform=${TARGETPLATFORM} php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
+#FROM --platform=${TARGETPLATFORM} php:8.4-fpm-alpine
 LABEL maintainer="stanzhou m@sq.mk"
 
 ARG ALPINE_REPO=https://dl-cdn.alpinelinux.org
@@ -47,7 +47,7 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 #  && docker-php-ext-configure gd --with-freetype --with-jpeg \
 #  && docker-php-ext-install bcmath exif opcache pcntl zip gd gmp mysqli pdo_mysql gettext \
   && install-php-extensions bcmath exif opcache pcntl zip gd gmp pdo_mysql gettext \
-    sockets redis yaml \
+    sockets redis yaml mongodb xdebug \
      \
   && rm -f /usr/bin/install-php-extensions \
 ## mongodb 支持3.6版本以下扩展
@@ -64,27 +64,27 @@ RUN ver=$(cat /etc/alpine-release | awk -F '.' '{printf "%s.%s", $1, $2;}') \
 #  && rm -rf /tmp/mongodb \
 #    \
 # mongodb 最新版本
-  && apk add --no-cache --virtual .build-deps linux-headers curl-dev openssl openssl-dev \
-  && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/mongodb" -o mongodb.tgz \
-  && mkdir -p /tmp/mongodb \
-  && tar -xf mongodb.tgz -C /tmp/mongodb --strip-components=1 \
-  && rm -f mongodb.tgz \
-  && docker-php-ext-configure /tmp/mongodb --enable-mongodb --with-mongodb-ssl=auto \
-  && docker-php-ext-install -j${NPROC} /tmp/mongodb \
-  #先禁用，需要时再启用，
-  && sed -i 's/^/;/' /usr/local/etc/php/conf.d/docker-php-ext-mongodb.ini \
-  && rm -rf /tmp/mongodb \
-    \
-# xdebug
-  && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/xdebug" -o xdebug.tgz \
-  && mkdir -p /tmp/xdebug \
-  && tar -xf xdebug.tgz -C /tmp/xdebug --strip-components=1 \
-  && rm -f xdebug.tgz \
-  && docker-php-ext-configure /tmp/xdebug --enable-xdebug \
-  && docker-php-ext-install -j${NPROC} /tmp/xdebug \
-  #先禁用，需要时再启用，
-  && sed -i 's/^/;/' /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-  && rm -rf /tmp/xdebug \
+#  && apk add --no-cache --virtual .build-deps linux-headers curl-dev openssl openssl-dev \
+#  && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/mongodb" -o mongodb.tgz \
+#  && mkdir -p /tmp/mongodb \
+#  && tar -xf mongodb.tgz -C /tmp/mongodb --strip-components=1 \
+#  && rm -f mongodb.tgz \
+#  && docker-php-ext-configure /tmp/mongodb --enable-mongodb --with-mongodb-ssl=auto \
+#  && docker-php-ext-install -j${NPROC} /tmp/mongodb \
+#  #先禁用，需要时再启用，
+#  && sed -i 's/^/;/' /usr/local/etc/php/conf.d/docker-php-ext-mongodb.ini \
+#  && rm -rf /tmp/mongodb \
+#    \
+## xdebug
+#  && curl -fsSL "${URL_PREFIX}https://pecl.php.net/get/xdebug" -o xdebug.tgz \
+#  && mkdir -p /tmp/xdebug \
+#  && tar -xf xdebug.tgz -C /tmp/xdebug --strip-components=1 \
+#  && rm -f xdebug.tgz \
+#  && docker-php-ext-configure /tmp/xdebug --enable-xdebug \
+#  && docker-php-ext-install -j${NPROC} /tmp/xdebug \
+#  #先禁用，需要时再启用，
+#  && sed -i 's/^/;/' /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
+#  && rm -rf /tmp/xdebug \
   \
 # xdebug 配置
   && echo "" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \

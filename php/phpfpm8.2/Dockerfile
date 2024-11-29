@@ -1,12 +1,12 @@
-FROM --platform=${TARGETPLATFORM} php:8.2-fpm-alpine
-MAINTAINER stanzhou "m@sq.mk"
+FROM php:8.2-fpm-alpine
+LABEL maintainer="stanzhou m@sq.mk"
 
 ARG ALPINE_REPO=https://dl-cdn.alpinelinux.org
 #ARG ALPINE_REPO=https://mirrors.aliyun.com
 ARG URL_PREFIX=
 ARG PROXY_DNS=10.1.0.251
 
-ENV DEFAULT_COMPOSER_VER=2.7.6
+ENV DEFAULT_COMPOSER_VER=2.8.1
 ENV PHP_PHAR_DIR="${PHP_INI_DIR}/phar"
 ENV PATH="${PATH}:${PHP_PHAR_DIR}"
 ENV TIMEZONE="Asia/Shanghai"
